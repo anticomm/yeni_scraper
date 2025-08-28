@@ -2,35 +2,14 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.edge.options import Options
 from selenium.webdriver.edge.service import Service
-import time, requests, os
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time, os
+from telegram import send_to_telegram
 
-TELEGRAM_TOKEN = "8424407061:AAGCMvS7wGZ-dAtLtbtdEZ3eqoDOkAWPIjI"
-TELEGRAM_CHAT_ID = "1390108995"
-URL = "https://www.amazon.com.tr/s?i=fashion&rh=n%3A12466553031%2Cn%3A13546649031%2Cn%3A13546675031%2Cp_36%3A41000-115000%2Cp_98%3A21345978031%2Cp_6%3AA1UNQM1SR2CHM%2Cp_123%3A198664%257C234857%257C256097%257C6832&s=date-desc-rank&dc&ds=v1%3A3gu5moXKcv7f8iFlFhja8mKnXT4e6dvjHdahaT4eU5s&qid=1756406692&rnid=13546649031&ref=sr_st_date-desc-rank"
+# Daha sade bir URL ile test
+URL = "https://www.amazon.com.tr/s?i=fashion&rh=n%3A12466553031&dc"
 SENT_FILE = "sent_products.txt"
-
-def format_product_message(product):
-    title = product.get("title", "Ürün adı bulunamadı")
-    price = product.get("price", "Fiyat alınamadı")
-    link = product.get("link", "#")
-    image = product.get("image", None)
-
-    msg = f"{title}\n{price}\n{link}"
-    if image:
-        msg += f"\n{image}"
-    return msg
-
-def send_telegram_message(text):
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": text
-    }
-    try:
-        r = requests.post(url, json=payload, timeout=10)
-        print("📨 Telegram gönderildi:", r.status_code)
-    except Exception as e:
-        print("Telegram hatası:", e)
 
 def load_sent_products():
     if not os.path.exists(SENT_FILE):
@@ -51,11 +30,22 @@ def scrape_amazon_moda():
 
     driver = webdriver.Edge(service=Service(), options=options)
     driver.get(URL)
-    time.sleep(3)
+
+    # Sayfa tam yüklenene kadar bekle
+    try:
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-component-type='s-search-result']"))
+        )
+    except:
+        print("⚠️ Sayfa yüklenemedi.")
+        driver.quit()
+        return
 
     sent_links = load_sent_products()
     items = driver.find_elements(By.CSS_SELECTOR, "div[data-component-type='s-search-result']")
     print(f"🔍 {len(items)} ürün bulundu.")
+
+    products = []
 
     for item in items:
         try:
@@ -82,8 +72,7 @@ def scrape_amazon_moda():
                 "image": image
             }
 
-            msg = format_product_message(product)
-            send_telegram_message(msg)
+            products.append(product)
             save_sent_product(link)
 
         except Exception as e:
@@ -91,6 +80,11 @@ def scrape_amazon_moda():
             continue
 
     driver.quit()
+
+    if products:
+        send_to_telegram(products)
+    else:
+        print("⚠️ Gönderilecek ürün bulunamadı.")
 
 if __name__ == "__main__":
     scrape_amazon_moda()
