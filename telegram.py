@@ -1,3 +1,4 @@
+import os
 import requests
 
 def format_product_message(product):
@@ -32,20 +33,20 @@ def format_product_message(product):
         f"🔗 [🔥🔥 FIRSATA GİT 🔥🔥]({link})"
     )
 
-
-
-
 def send_to_telegram(products):
-    token = "8424407061:AAGCMvS7wGZ-dAtLtbtdEZ3eqoDOkAWPIjI"  # ← Buraya kendi bot token'ını yaz
-    chat_id = "1390108995"  # ← Buraya kendi chat ID'ni yaz
+    token = os.getenv("BOT_TOKEN")
+    chat_id = os.getenv("CHAT_ID")
     base_url = f"https://api.telegram.org/bot{token}"
+
+    if not token or not chat_id:
+        print("❌ BOT_TOKEN veya CHAT_ID tanımlı değil.")
+        return
 
     for product in products:
         message = format_product_message(product)
         image_url = product.get("image")
 
         if image_url and image_url.startswith("http"):
-            # Görselli gönderim
             payload = {
                 "chat_id": chat_id,
                 "photo": image_url,
@@ -54,7 +55,6 @@ def send_to_telegram(products):
             }
             response = requests.post(f"{base_url}/sendPhoto", data=payload)
         else:
-            # Görsel yoksa metin gönderimi
             payload = {
                 "chat_id": chat_id,
                 "text": message,
@@ -65,4 +65,4 @@ def send_to_telegram(products):
         if response.status_code == 200:
             print(f"✅ Gönderildi: {product.get('title', 'Ürün')}")
         else:
-            print(f"❌ Gönderim hatası: {product.get('title', 'Ürün')} → {response.text}")
+            print(f"❌ Gönderim hatası: {product.get('title', 'Ürün')} → {response.status_code} {response.text}")
