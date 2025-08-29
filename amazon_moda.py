@@ -84,7 +84,6 @@ def get_driver():
 def run():
     driver = get_driver()
 
-    # Amazon ana sayfasına gitmeden cookie eklenemez
     driver.get("https://www.amazon.com.tr")
 
     cookies = load_cookies(COOKIE_PATH)
@@ -100,7 +99,6 @@ def run():
         except Exception as e:
             print(f"⚠️ Cookie eklenemedi: {cookie.get('name')} → {e}")
 
-    # Filtreli sayfaya geç
     driver.get(URL)
 
     print("🧭 Sayfa başlığı:", driver.title)
@@ -128,7 +126,7 @@ def run():
             price_fraction = item.find_element(By.CSS_SELECTOR, ".a-price-fraction").text.strip()
             price = f"{price_whole},{price_fraction} TL"
             image = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("src")
-            link = item.find_element(By.CSS_SELECTOR, "a.a-link-normal").getAttribute("href")
+            link = item.find_element(By.CSS_SELECTOR, "a.a-link-normal").get_attribute("href")
 
             products.append({
                 "title": title,
