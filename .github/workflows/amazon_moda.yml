@@ -16,6 +16,11 @@ jobs:
       - name: Kodları çek
         uses: actions/checkout@v3
 
+      - name: Git ayarlarını yap
+        run: |
+          git config --global user.name "anticomm-bot"
+          git config --global user.email "anticomm@example.com"
+
       - name: Python ortamını kur
         uses: actions/setup-python@v4
         with:
@@ -26,3 +31,11 @@ jobs:
 
       - name: Scraper'ı çalıştır
         run: python amazon_moda.py
+
+      - name: send_products.txt dosyasını commit et
+        run: |
+          git add send_products.txt
+          git diff --cached --quiet || git commit -m "Yeni ürünler eklendi"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
