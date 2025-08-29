@@ -81,7 +81,7 @@ def run():
     # Amazon ana sayfasına gitmeden cookie eklenemez
     driver.get("https://www.amazon.com.tr")
 
-    cookies = load_cookies("cookies.json")  # Yerel cookie dosyası
+    cookies = load_cookies(r"C:\Users\erkan\Desktop\indirim uygulamaları\amazon_moda\cookies.json")  # Yerel cookie dosyası
     for cookie in cookies:
         try:
             clean_cookie = {
