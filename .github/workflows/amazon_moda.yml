@@ -1,17 +1,15 @@
 name: Amazon Scraper
 
 on:
-  schedule:
-
-  workflow_dispatch:
+  workflow_dispatch:  # Sadece elle tetiklenir
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
 
     env:
-      TELEGRAM_TOKEN: ${{ secrets.BOT_TOKEN }}
-      TELEGRAM_CHAT_ID: ${{ secrets.CHAT_ID }}
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      CHAT_ID: ${{ secrets.CHAT_ID }}
 
     steps:
       - name: Kod deposunu çek
