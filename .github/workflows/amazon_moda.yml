@@ -1,28 +1,28 @@
-name: Amazon Scraper
+name: Amazon Moda Scraper
 
 on:
-  workflow_dispatch:  # Sadece elle tetiklenir
+  schedule:
+    - cron: "*/5 * * * *"  # Her 5 dakikada bir çalıştır
+  workflow_dispatch:       # Manuel tetikleme seçeneği
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
-
     env:
+      COOKIE_B64: ${{ secrets.COOKIE_B64 }}
       BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
       CHAT_ID: ${{ secrets.CHAT_ID }}
-      COOKIE_B64: ${{ secrets.COOKIE_B64 }}
     steps:
-      - name: Kod deposunu çek
+      - name: Kodları çek
         uses: actions/checkout@v3
 
       - name: Python ortamını kur
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Bağımlılıkları yükle
-        run: |
-          pip install -r requirements.txt
+        run: pip install selenium webdriver-manager requests
 
       - name: Scraper'ı çalıştır
         run: python amazon_moda.py
