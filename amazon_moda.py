@@ -13,8 +13,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 URL = "https://www.amazon.com.tr/s?i=fashion&rh=n%3A12466553031%2Cn%3A13546649031%2Cn%3A13546675031%2Cp_36%3A41000-115000%2Cp_98%3A21345978031%2Cp_6%3AA1UNQM1SR2CHM%2Cp_123%3A198664%257C234857%257C256097%257C6832&s=date-desc-rank&dc&ds=v1%3A3gu5moXKcv7f8iFlFhja8mKnXT4e6dvjHdahaT4eU5s&qid=1756406692&rnid=13546649031&ref=sr_st_date-desc-rank"
 
-COOKIE_PATH = r"C:\Users\erkan\cookie_moda.json"
-
 def format_product_message(product):
     title = product.get("title", "🛍️ Ürün adı bulunamadı")
     price = product.get("price", "Fiyat alınamadı")
@@ -59,27 +57,19 @@ def send_to_telegram(products):
         else:
             print(f"❌ Gönderim hatası: {product.get('title', 'Ürün')} → {response.status_code} {response.text}")
 
-def load_cookies(driver, path=COOKIE_PATH):
+def load_cookies(driver):
     cookie_b64 = os.getenv("COOKIE_B64")
-    if cookie_b64:
-        print("🔐 Cookie'ler GitHub Secrets üzerinden yükleniyor...")
-        try:
-            cookie_str = base64.b64decode(cookie_b64).decode("utf-8")
-            cookies = json.loads(cookie_str)
-        except Exception as e:
-            print(f"❌ Cookie decode hatası: {e}")
-            return []
-    else:
-        if not os.path.exists(path):
-            print(f"❌ Cookie dosyası bulunamadı: {path}")
-            return []
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                print("📁 Cookie dosyası bulundu, yükleniyor...")
-                cookies = json.load(f)
-        except Exception as e:
-            print("❌ Cookie dosyası okunamadı:", e)
-            return []
+    if not cookie_b64:
+        print("❌ COOKIE_B64 tanımlı değil.")
+        return []
+
+    print("🔐 Cookie'ler GitHub Secrets üzerinden yükleniyor...")
+    try:
+        cookie_str = base64.b64decode(cookie_b64).decode("utf-8")
+        cookies = json.loads(cookie_str)
+    except Exception as e:
+        print(f"❌ Cookie decode hatası: {e}")
+        return []
 
     for cookie in cookies:
         try:
