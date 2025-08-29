@@ -13,6 +13,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 URL = "https://www.amazon.com.tr/s?i=fashion&rh=n%3A12466553031%2Cn%3A13546649031%2Cn%3A13546675031%2Cp_36%3A41000-115000%2Cp_98%3A21345978031%2Cp_6%3AA1UNQM1SR2CHM%2Cp_123%3A198664%257C234857%257C256097%257C6832&s=date-desc-rank&dc&ds=v1%3A3gu5moXKcv7f8iFlFhja8mKnXT4e6dvjHdahaT4eU5s&qid=1756406692&rnid=13546649031&ref=sr_st_date-desc-rank"
 
+SENT_FILE = "send_products.txt"
+
 def format_product_message(product):
     title = product.get("title", "🛍️ Ürün adı bulunamadı")
     price = product.get("price", "Fiyat alınamadı")
@@ -83,6 +85,17 @@ def load_cookies(driver):
         except Exception as e:
             print(f"⚠️ Cookie eklenemedi: {cookie.get('name')} → {e}")
 
+def load_sent_links():
+    if not os.path.exists(SENT_FILE):
+        return set()
+    with open(SENT_FILE, "r", encoding="utf-8") as f:
+        return set(line.strip() for line in f)
+
+def save_sent_links(products):
+    with open(SENT_FILE, "a", encoding="utf-8") as f:
+        for product in products:
+            f.write(product["link"] + "\n")
+
 def get_driver():
     profile_id = str(uuid.uuid4())
     options = Options()
@@ -141,7 +154,14 @@ def run():
     driver.quit()
 
     if products:
-        send_to_telegram(products)
+        sent_links = load_sent_links()
+        new_products = [p for p in products if p["link"] not in sent_links]
+
+        if new_products:
+            send_to_telegram(new_products)
+            save_sent_links(new_products)
+        else:
+            print("⚠️ Yeni ürün bulunamadı.")
     else:
         print("⚠️ Gönderilecek ürün bulunamadı.")
 
