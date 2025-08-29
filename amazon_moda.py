@@ -12,6 +12,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 URL = "https://www.amazon.com.tr/s?i=fashion&rh=n%3A12466553031%2Cn%3A13546649031%2Cn%3A13546675031%2Cp_36%3A41000-115000%2Cp_98%3A21345978031%2Cp_6%3AA1UNQM1SR2CHM%2Cp_123%3A198664%257C234857%257C256097%257C6832&s=date-desc-rank&dc&ds=v1%3A3gu5moXKcv7f8iFlFhja8mKnXT4e6dvjHdahaT4eU5s&qid=1756406692&rnid=13546649031&ref=sr_st_date-desc-rank"
 
+COOKIE_PATH = r"C:\Users\erkan\Desktop\indirim uygulamaları\amazon_moda\cookies.json"
+
 def format_product_message(product):
     title = product.get("title", "🛍️ Ürün adı bulunamadı")
     price = product.get("price", "Fiyat alınamadı")
@@ -56,9 +58,13 @@ def send_to_telegram(products):
         else:
             print(f"❌ Gönderim hatası: {product.get('title', 'Ürün')} → {response.status_code} {response.text}")
 
-def load_cookies(path="cookies.json"):
+def load_cookies(path):
+    if not os.path.exists(path):
+        print(f"❌ Cookie dosyası bulunamadı: {path}")
+        return []
     try:
         with open(path, "r", encoding="utf-8") as f:
+            print("📁 Cookie dosyası bulundu, yükleniyor...")
             return json.load(f)
     except Exception as e:
         print("❌ Cookie dosyası okunamadı:", e)
@@ -81,7 +87,7 @@ def run():
     # Amazon ana sayfasına gitmeden cookie eklenemez
     driver.get("https://www.amazon.com.tr")
 
-    cookies = load_cookies(r"C:\Users\erkan\Desktop\indirim uygulamaları\amazon_moda\cookies.json")  # Yerel cookie dosyası
+    cookies = load_cookies(COOKIE_PATH)
     for cookie in cookies:
         try:
             clean_cookie = {
@@ -122,7 +128,7 @@ def run():
             price_fraction = item.find_element(By.CSS_SELECTOR, ".a-price-fraction").text.strip()
             price = f"{price_whole},{price_fraction} TL"
             image = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("src")
-            link = item.find_element(By.CSS_SELECTOR, "a.a-link-normal").get_attribute("href")
+            link = item.find_element(By.CSS_SELECTOR, "a.a-link-normal").getAttribute("href")
 
             products.append({
                 "title": title,
