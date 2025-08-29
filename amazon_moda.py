@@ -1,5 +1,6 @@
 import os
 import uuid
+import json
 import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -15,26 +16,10 @@ def format_product_message(product):
     title = product.get("title", "🛍️ Ürün adı bulunamadı")
     price = product.get("price", "Fiyat alınamadı")
     link = product.get("link", "#")
-    discount = product.get("discount", "")
-    rating = product.get("rating", "")
-    colors = product.get("colors", [])
-    specs = product.get("specs", [])
-
-    if "TL" not in price:
-        price = f"{price} TL"
-
-    indirimbilgi = f"%{discount}" if discount and discount.isdigit() else ""
-    stars = f"⭐ {rating}" if rating else ""
-    renkler = ", ".join([c["color"] for c in colors]) if colors else None
-    teknik = "\n".join([f"▫️ {spec}" for spec in specs]) if specs else ""
-
     return (
         f"*{title}*\n"
-        f"{indirimbilgi}  {stars}\n"
-        f"{teknik}\n"
-        f"{f'🎨 Renkler: {renkler}' if renkler else ''}\n"
         f"💰 *{price}*\n"
-        f"🔗 [🔥🔥 FIRSATA GİT 🔥🔥]({link})"
+        f"🔗 [Fırsata Git]({link})"
     )
 
 def send_to_telegram(products):
@@ -71,6 +56,14 @@ def send_to_telegram(products):
         else:
             print(f"❌ Gönderim hatası: {product.get('title', 'Ürün')} → {response.status_code} {response.text}")
 
+def load_cookies(path):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        print("❌ Cookie dosyası okunamadı:", e)
+        return []
+
 def get_driver():
     profile_id = str(uuid.uuid4())
     options = Options()
@@ -84,6 +77,23 @@ def get_driver():
 
 def run():
     driver = get_driver()
+
+    # Cookie eklemeden önce Amazon ana sayfasına git
+    driver.get("https://www.amazon.com.tr")
+    cookies = load_cookies("C:/Users/erkan/Desktop/indirim uygulamaları/amazon_moda/cookies.json")
+    for cookie in cookies:
+        try:
+            clean_cookie = {
+                "name": cookie["name"],
+                "value": cookie["value"],
+                "domain": cookie["domain"],
+                "path": cookie.get("path", "/")
+            }
+            driver.add_cookie(clean_cookie)
+        except Exception as e:
+            print(f"⚠️ Cookie eklenemedi: {cookie.get('name')} → {e}")
+
+    # Filtreli sayfaya geç
     driver.get(URL)
 
     print("🧭 Sayfa başlığı:", driver.title)
