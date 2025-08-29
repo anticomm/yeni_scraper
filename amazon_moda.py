@@ -56,7 +56,7 @@ def send_to_telegram(products):
         else:
             print(f"❌ Gönderim hatası: {product.get('title', 'Ürün')} → {response.status_code} {response.text}")
 
-def load_cookies(path):
+def load_cookies(path="cookies.json"):
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -78,9 +78,10 @@ def get_driver():
 def run():
     driver = get_driver()
 
-    # Cookie eklemeden önce Amazon ana sayfasına git
+    # Amazon ana sayfasına gitmeden cookie eklenemez
     driver.get("https://www.amazon.com.tr")
-    cookies = load_cookies("C:/Users/erkan/Desktop/indirim uygulamaları/amazon_moda/cookies.json")
+
+    cookies = load_cookies("cookies.json")  # Yerel cookie dosyası
     for cookie in cookies:
         try:
             clean_cookie = {
