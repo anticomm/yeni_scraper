@@ -3,6 +3,7 @@ import uuid
 import json
 import base64
 import requests
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -85,16 +86,16 @@ def load_cookies(driver):
         except Exception as e:
             print(f"⚠️ Cookie eklenemedi: {cookie.get('name')} → {e}")
 
-def load_sent_links():
+def load_sent_titles():
     if not os.path.exists(SENT_FILE):
         return set()
     with open(SENT_FILE, "r", encoding="utf-8") as f:
         return set(line.strip() for line in f)
 
-def save_sent_links(products):
+def save_sent_titles(products):
     with open(SENT_FILE, "a", encoding="utf-8") as f:
         for product in products:
-            f.write(product["link"] + "\n")
+            f.write(product["title"].strip() + "\n")
 
 def get_driver():
     profile_id = str(uuid.uuid4())
@@ -132,7 +133,7 @@ def run():
     print(f"🔍 {len(items)} ürün bulundu.")
 
     products = []
-    for item in items[:1]:  # Şimdilik 5 ürünle sınırlandırılmış
+    for item in items[:1]:  # Şimdilik 1 ürünle sınırlandırılmış
         try:
             title = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("alt")
             price_whole = item.find_element(By.CSS_SELECTOR, ".a-price-whole").text.strip()
@@ -154,16 +155,18 @@ def run():
     driver.quit()
 
     if products:
-        sent_links = load_sent_links()
-        new_products = [p for p in products if p["link"] not in sent_links]
+        sent_titles = load_sent_titles()
+        new_products = [p for p in products if p["title"].strip() not in sent_titles]
 
         if new_products:
             send_to_telegram(new_products)
-            save_sent_links(new_products)
+            save_sent_titles(new_products)
         else:
             print("⚠️ Yeni ürün bulunamadı.")
     else:
         print("⚠️ Gönderilecek ürün bulunamadı.")
+
+    print("⏱️ Tarama tamamlandı:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 if __name__ == "__main__":
     run()
