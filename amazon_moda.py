@@ -133,7 +133,7 @@ def run():
     print(f"🔍 {len(items)} ürün bulundu.")
 
     products = []
-    for item in items[:1]:  # Şimdilik 1 ürünle sınırlandırılmış
+    for item in items:  # Şimdilik 1 ürünle sınırlandırılmış
         try:
             title = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("alt")
             price_whole = item.find_element(By.CSS_SELECTOR, ".a-price-whole").text.strip()
