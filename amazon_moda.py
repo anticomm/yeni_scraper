@@ -1,9 +1,7 @@
 import os
-import uuid
 import json
+import time
 import base64
-import requests
-from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -11,114 +9,113 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from telegram_cep import send_message
 
-URL = "https://www.amazon.com.tr/s?i=fashion&rh=n%3A12466553031%2Cn%3A13546649031%2Cn%3A13546675031%2Cp_36%3A41000-115000%2Cp_98%3A21345978031%2Cp_6%3AA1UNQM1SR2CHM%2Cp_123%3A198664%257C234857%257C256097%257C6832&s=date-desc-rank&dc&ds=v1%3A3gu5moXKcv7f8iFlFhja8mKnXT4e6dvjHdahaT4eU5s&qid=1756406692&rnid=13546649031&ref=sr_st_date-desc-rank"
-
+URL = "https://www.amazon.com.tr/s?i=fashion&rh=n%3A13546675031%2Cp_36%3A41000-115000%2Cp_6%3AA1UNQM1SR2CHM%2Cp_123%3A198664%257C234857%257C256097%257C6832%2Cp_n_g-1004152217091%3A13681703031%257C13681704031%257C13681705031%257C13681706031%257C13681707031&s=price-asc-rank&dc&ds=v1%3A2yjCoesrVCjvcZCCGwaMuJeEX9HFjHO0Fia1OLlpKPQ"
+COOKIE_FILE = "cookie_cep.json"
 SENT_FILE = "send_products.txt"
 
-def format_product_message(product):
-    title = product.get("title", "🛍️ Ürün adı bulunamadı")
-    price = product.get("price", "Fiyat alınamadı")
-    link = product.get("link", "#")
-    return (
-        f"*{title}*\n"
-        f"💰 *{price}*\n"
-        f"🔗 [Fırsata Git]({link})"
-    )
-
-def send_to_telegram(products):
-    token = os.getenv("BOT_TOKEN")
-    chat_id = os.getenv("CHAT_ID")
-    base_url = f"https://api.telegram.org/bot{token}"
-
-    if not token or not chat_id:
-        print("❌ BOT_TOKEN veya CHAT_ID tanımlı değil.")
-        return
-
-    for product in products:
-        message = format_product_message(product)
-        image_url = product.get("image")
-
-        if image_url and image_url.startswith("http"):
-            payload = {
-                "chat_id": chat_id,
-                "photo": image_url,
-                "caption": message,
-                "parse_mode": "Markdown"
-            }
-            response = requests.post(f"{base_url}/sendPhoto", data=payload)
-        else:
-            payload = {
-                "chat_id": chat_id,
-                "text": message,
-                "parse_mode": "Markdown"
-            }
-            response = requests.post(f"{base_url}/sendMessage", data=payload)
-
-        if response.status_code == 200:
-            print(f"✅ Gönderildi: {product.get('title', 'Ürün')}")
-        else:
-            print(f"❌ Gönderim hatası: {product.get('title', 'Ürün')} → {response.status_code} {response.text}")
-
-def load_cookies(driver):
+def decode_cookie_from_env():
     cookie_b64 = os.getenv("COOKIE_B64")
     if not cookie_b64:
-        print("❌ COOKIE_B64 tanımlı değil.")
-        return []
-
-    print("🔐 Cookie'ler GitHub Secrets üzerinden yükleniyor...")
+        print("❌ COOKIE_B64 bulunamadı.")
+        return False
     try:
-        cookie_str = base64.b64decode(cookie_b64).decode("utf-8")
-        cookies = json.loads(cookie_str)
+        decoded = base64.b64decode(cookie_b64)
+        with open(COOKIE_FILE, "wb") as f:
+            f.write(decoded)
+        print("✅ Cookie dosyası oluşturuldu.")
+        return True
     except Exception as e:
         print(f"❌ Cookie decode hatası: {e}")
-        return []
+        return False
 
+def load_cookies(driver):
+    if not os.path.exists(COOKIE_FILE):
+        print("❌ Cookie dosyası eksik.")
+        return
+    with open(COOKIE_FILE, "r", encoding="utf-8") as f:
+        cookies = json.load(f)
     for cookie in cookies:
         try:
-            clean_cookie = {
+            driver.add_cookie({
                 "name": cookie["name"],
                 "value": cookie["value"],
                 "domain": cookie["domain"],
                 "path": cookie.get("path", "/")
-            }
-            driver.add_cookie(clean_cookie)
+            })
         except Exception as e:
             print(f"⚠️ Cookie eklenemedi: {cookie.get('name')} → {e}")
 
-def load_sent_titles():
-    if not os.path.exists(SENT_FILE):
-        return set()
-    with open(SENT_FILE, "r", encoding="utf-8") as f:
-        return set(line.strip() for line in f)
-
-def save_sent_titles(products):
-    with open(SENT_FILE, "a", encoding="utf-8") as f:
-        for product in products:
-            f.write(product["title"].strip() + "\n")
-
 def get_driver():
-    profile_id = str(uuid.uuid4())
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument("--window-size=1920,1080")
-    options.add_argument(f"--user-data-dir=/tmp/chrome-profile-{profile_id}")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/115 Safari/537.36")
     return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-def run():
-    driver = get_driver()
+def get_price_from_detail(driver, url):
+    try:
+        driver.get(url)
 
+        WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "body"))
+        )
+        time.sleep(2)
+
+        try:
+            variant_input = driver.find_element(By.CSS_SELECTOR, "input.a-button-input[aria-checked='true']")
+            driver.execute_script("arguments[0].click();", variant_input)
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, ".aok-offscreen"))
+            )
+            time.sleep(1)
+        except:
+            pass
+
+        price_elements = driver.find_elements(By.CSS_SELECTOR, ".aok-offscreen")
+        for el in price_elements:
+            text = el.get_attribute("innerText").strip()
+            if "TL" in text and any(char.isdigit() for char in text):
+                return text
+
+        return "Fiyat alınamadı"
+    except Exception as e:
+        print(f"⚠️ Detay sayfasından fiyat alınamadı: {e}")
+        return "Fiyat alınamadı"
+
+def load_sent_data():
+    data = {}
+    if os.path.exists(SENT_FILE):
+        with open(SENT_FILE, "r", encoding="utf-8") as f:
+            for line in f:
+                parts = line.strip().split("|", 1)
+                if len(parts) == 2:
+                    asin, price = parts
+                    data[asin.strip()] = price.strip()
+    return data
+
+def save_sent_data(products_to_send):
+    existing = load_sent_data()
+    for product in products_to_send:
+        asin = product['asin'].strip()
+        price = product['price'].strip()
+        existing[asin] = price
+    with open(SENT_FILE, "w", encoding="utf-8") as f:
+        for asin, price in existing.items():
+            f.write(f"{asin} | {price}\n")
+
+def run():
+    if not decode_cookie_from_env():
+        return
+
+    driver = get_driver()
     driver.get("https://www.amazon.com.tr")
+    time.sleep(2)
     load_cookies(driver)
     driver.get(URL)
-
-    print("🧭 Sayfa başlığı:", driver.title)
-    print("🔗 URL:", driver.current_url)
-    print("📄 Sayfa içeriği (ilk 500 karakter):")
-    print(driver.page_source[:500])
 
     try:
         WebDriverWait(driver, 30).until(
@@ -132,41 +129,58 @@ def run():
     items = driver.find_elements(By.CSS_SELECTOR, "div[data-component-type='s-search-result']")
     print(f"🔍 {len(items)} ürün bulundu.")
 
-    products = []
-    for item in items:  # Şimdilik 1 ürünle sınırlandırılmış
+    product_links = []
+    for item in items:
         try:
-            title = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("alt")
-            price_whole = item.find_element(By.CSS_SELECTOR, ".a-price-whole").text.strip()
-            price_fraction = item.find_element(By.CSS_SELECTOR, ".a-price-fraction").text.strip()
-            price = f"{price_whole},{price_fraction} TL"
-            image = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("src")
+            asin = item.get_attribute("data-asin")
+            title = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("alt").strip()
             link = item.find_element(By.CSS_SELECTOR, "a.a-link-normal").get_attribute("href")
-
-            products.append({
+            image = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("src")
+            product_links.append({
+                "asin": asin,
                 "title": title,
-                "price": price,
-                "image": image,
-                "link": link
+                "link": link,
+                "image": image
             })
         except Exception as e:
-            print("Ürün hatası:", e)
+            print("⚠️ Listeleme parse hatası:", e)
+            continue
+
+    products = []
+    for product in product_links:
+        try:
+            price = get_price_from_detail(driver, product["link"])
+            product["price"] = price
+            products.append(product)
+        except Exception as e:
+            print("⚠️ Detay sayfa hatası:", e)
             continue
 
     driver.quit()
 
-    if products:
-        sent_titles = load_sent_titles()
-        new_products = [p for p in products if p["title"].strip() not in sent_titles]
+    sent_data = load_sent_data()
+    products_to_send = []
 
-        if new_products:
-            send_to_telegram(new_products)
-            save_sent_titles(new_products)
+    for product in products:
+        asin = product["asin"]
+        price = product["price"].strip()
+
+        if asin in sent_data:
+            old_price = sent_data[asin]
+            if price != old_price:
+                print(f"📉 Fiyat düştü: {product['title']} → {old_price} → {price}")
+                products_to_send.append(product)
         else:
-            print("⚠️ Yeni ürün bulunamadı.")
-    else:
-        print("⚠️ Gönderilecek ürün bulunamadı.")
+            print(f"🆕 Yeni ürün: {product['title']}")
+            products_to_send.append(product)
 
-    print("⏱️ Tarama tamamlandı:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    if products_to_send:
+        for p in products_to_send:
+            send_message(p)
+        save_sent_data(products_to_send)
+        print(f"📁 Dosya güncellendi: {len(products_to_send)} ürün eklendi/güncellendi.")
+    else:
+        print("⚠️ Yeni veya indirimli ürün bulunamadı.")
 
 if __name__ == "__main__":
     run()
