@@ -190,8 +190,6 @@ def run():
         print(f"🔍 Sayfa {page}: {len(items)} ürün bulundu.")
 
         for item in items:
-                # ⬅️ Buradaki ürün işleme kodu olduğu gibi kalır
-                ...
             check_timeout()
             try:
                 if item.find_elements(By.XPATH, ".//span[contains(text(), 'Sponsorlu')]"):
@@ -209,7 +207,7 @@ def run():
                     rating = item.find_element(By.CSS_SELECTOR, "span.a-icon-alt").text.strip()
                 except:
                     rating = ""
-            
+
                 raw_price = get_used_price_from_item(item)
                 price = extract_clean_price(raw_price) if raw_price else None
                 if not price:
@@ -280,22 +278,21 @@ def run():
             product["amazon_link"] = product.get("link", "")
             sent_data[asin] = price
             print(f"🆕 Yeni ürün eklendi ama gönderilmedi: {product['title']} → {price}")
-    
+
     if products_to_send:
         site.generate_site(products_to_send)
         print(f"📁 Dosya güncellendi: {len(products_to_send)} ürün eklendi/güncellendi.")
-        
+
         cpu_count = multiprocessing.cpu_count()
         safe_workers = max(1, min(4, cpu_count // 2))  # 2 çekirdekte → 1 veya 2
 
         with ThreadPoolExecutor(max_workers=safe_workers) as executor:
             for p in products_to_send:
                 send_message(p)
+                print(f"🧵 capture başlatıldı: {p['title']}")
                 executor.submit(run_capture, p)
 
-
-        save_sent_data(sent_data)
-
+    save_sent_data(sent_data)
 def save_sent_data(sent_data):
     existing = {}
     if os.path.exists("send_products.txt"):
