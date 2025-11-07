@@ -1,0 +1,90 @@
+name: Amazon Scraper A
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  run-scraper-a:
+    name: Scraper A
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+
+    env:
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      CHAT_ID: ${{ secrets.CHAT_ID }}
+      COOKIE_B64: ${{ secrets.COOKIE_B64 }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      CSE_ID: ${{ secrets.CSE_ID }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      SUBMODULE_TOKEN: ${{ secrets.SUBMODULE_TOKEN }}
+      COOKIE2_B64: ${{ secrets.COOKIE2_B64 }}
+    steps: 
+      - name: Reposu checkout edilsin
+        uses: actions/checkout@v4
+
+      - name: urunlerim repo'sunu klonla
+        run: |
+          git clone https://github.com/anticomm/urunlerim.git
+      
+      - name: Python ortamı
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Pip cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Gereken paketleri yükle
+        run: |
+          pip install -r requirements.txt || (
+            echo "⚠️ Cache kaynaklı hata, yeniden deneniyor..."
+            pip install --no-cache-dir -r requirements.txt
+          )
+
+      - name: Cookie dosyasını oluştur
+        run: echo "${{ secrets.COOKIE_B64 }}" | base64 -d > cookie_cep.json
+
+      - name: Scraper A'yı çalıştır
+        run: timeout 110s python amazon_cep.py || echo "⚠️ Scraper B timeout ile kesildi ama zincir devam ediyor"
+     
+      - name: Değişiklikleri commit et ve pushla
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add send_products.txt
+          git commit -m "Scraper A → Fiyat güncellemesi" || echo "⏩ Değişiklik yok"
+          git pull origin main --rebase --autostash || echo "⏩ Pull başarısız, devam ediliyor"
+          git push || echo "⏩ Push başarısız ama zincir devam ediyor"
+
+      - name: urunlerim repo'suna HTML pushla
+        env:
+          TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          cd urunlerim
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git remote set-url origin https://$TOKEN@github.com/anticomm/urunlerim.git
+
+          git add Elektronik/*.html Elektronik/index.html || echo "⏩ HTML dosyası yok"
+          git commit -m "📦 Yeni ürünler eklendi" || echo "⏩ Commit edilecek değişiklik yok"
+          git pull origin main --rebase --autostash || echo "⏩ Pull başarısız, devam ediliyor"
+          git push origin main --force-with-lease || echo "⏩ Push başarısız ama zincir devam ediyor"
+      - name: 30 saniye bekle
+        run: sleep 20
+
+      - name: Scraper B'yi tetikle
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/anticomm/lens/actions/workflows/scraperb.yml/dispatches \
+            -d '{"ref":"master"}' || echo "⚠️ Scraper B tetiklenemedi ama zincir devam ediyor"
