@@ -284,8 +284,8 @@ def run():
         cpu_count = multiprocessing.cpu_count()
         safe_workers = max(1, min(4, cpu_count // 2))  # 2 çekirdekte → 1 veya 2
 
-            for p in products_to_send:
-                send_message(p)
+        for p in products_to_send:
+            send_message(p)
 
     save_sent_data(sent_data)
 def save_sent_data(sent_data):
