@@ -254,15 +254,15 @@ def run():
             if new_val < old_val:
                 fark = old_val - new_val
                 oran = (fark / old_val) * 100
-                if oran >= 10:
-                    print(f"📉 %10+ indirim: {product['title']} → {old_price} → {price} (%{oran:.1f})")
+                if oran >= 20:
+                    print(f"📉 %20+ indirim: {product['title']} → {old_price} → {price} (%{oran:.1f})")
                     product["rating"] = product.get("rating", "")
                     product["specs"] = product.get("specs", [])
                     product["amazon_link"] = product.get("link", "")
                     product["discount"] = f"{oran:.1f}"
                     products_to_send.append(product)
                 else:
-                    print(f"⏩ İndirim <%10: {product['title']} → %{oran:.1f}")
+                    print(f"⏩ İndirim <%20: {product['title']} → %{oran:.1f}")
             else:
                 print(f"⏩ Fiyat yükseldi veya aynı: {product['title']} → {old_price} → {price}")
 
@@ -273,8 +273,8 @@ def run():
             product["rating"] = product.get("rating", "")
             product["specs"] = product.get("specs", [])
             product["amazon_link"] = product.get("link", "")
-            products_to_send.append(product)
-            sent_data[asin] = price
+            sent_data[asin] = price  # sadece kaydet
+            print(f"🆕 Yeni ürün eklendi ama gönderilmedi: {product['title']} → {price}")
     
     if products_to_send:
         site.generate_site(products_to_send)
