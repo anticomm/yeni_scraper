@@ -5,6 +5,7 @@ import json
 import time
 import base64
 import re
+import multiprocessing
 import site_generator as site
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -284,10 +285,14 @@ def run():
         site.generate_site(products_to_send)
         print(f"📁 Dosya güncellendi: {len(products_to_send)} ürün eklendi/güncellendi.")
         
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        cpu_count = multiprocessing.cpu_count()
+        safe_workers = max(1, min(4, cpu_count // 2))  # 2 çekirdekte → 1 veya 2
+
+        with ThreadPoolExecutor(max_workers=safe_workers) as executor:
             for p in products_to_send:
                 send_message(p)
                 executor.submit(run_capture, p)
+
 
         save_sent_data(sent_data)
 
