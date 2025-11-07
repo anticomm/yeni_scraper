@@ -15,8 +15,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from telegram_cep import send_message
-from capture import run_capture
-from concurrent.futures import ThreadPoolExecutor
 URL = "https://www.amazon.com.tr/s?i=fashion&rh=n%3A12466553031%2Cn%3A13546649031%2Cn%3A13546675031%2Cp_n_g-1004152217091%3A13681700031%257C13681701031%257C13681702031%257C13681703031%257C13681704031%257C13681705031%257C13681706031%2Cp_6%3AA1UNQM1SR2CHM%2Cp_123%3A198664%2Cp_98%3A21345978031&s=price-asc-rank&dc&ds=v1%3AFYFZVYHlN9mVXXRi9BN42Ar%2FgPchnk6%2Bqp2K97jUkfo&xpid=DdVSLdcsSn-m6"
 COOKIE_FILE = "cookie_cep.json"
 SENT_FILE = "send_products.txt"
@@ -286,11 +284,8 @@ def run():
         cpu_count = multiprocessing.cpu_count()
         safe_workers = max(1, min(4, cpu_count // 2))  # 2 çekirdekte → 1 veya 2
 
-        with ThreadPoolExecutor(max_workers=safe_workers) as executor:
             for p in products_to_send:
                 send_message(p)
-                print(f"🧵 capture başlatıldı: {p['title']}")
-                executor.submit(run_capture, p)
 
     save_sent_data(sent_data)
 def save_sent_data(sent_data):
