@@ -7,7 +7,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from telegram_cep import send_message
-from capture import run_capture
 import site_generator as site
 
 start = time.time()
@@ -256,7 +255,6 @@ def run():
         print(f"📁 Dosya güncellendi: {len(products_to_send)} ürün eklendi/güncellendi.")
         for p in products_to_send:
             send_message(p)
-            run_capture(p)
 
     save_sent_data(sent_data)
 
