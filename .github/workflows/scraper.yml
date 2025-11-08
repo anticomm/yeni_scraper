@@ -21,7 +21,6 @@ jobs:
       CSE_ID: ${{ secrets.CSE_ID }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       SUBMODULE_TOKEN: ${{ secrets.SUBMODULE_TOKEN }}
-      COOKIE2_B64: ${{ secrets.COOKIE2_B64 }}
     steps: 
       - name: Reposu checkout edilsin
         uses: actions/checkout@v4
@@ -80,7 +79,7 @@ jobs:
           git pull origin main --rebase --autostash || echo "⏩ Pull başarısız, devam ediliyor"
           git push origin main --force-with-lease || echo "⏩ Push başarısız ama zincir devam ediyor"
       - name: 30 saniye bekle
-        run: sleep 20
+        run: sleep 2
 
       - name: Scraper B'yi tetikle
         run: |
