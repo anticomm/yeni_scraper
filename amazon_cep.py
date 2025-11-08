@@ -255,7 +255,6 @@ def run():
         print(f"📁 Dosya güncellendi: {len(products_to_send)} ürün eklendi/güncellendi.")
         for p in products_to_send:
             send_message(p)
-            run_capture(p)
 
     save_sent_data(sent_data)
 
