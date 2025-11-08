@@ -151,8 +151,10 @@ def save_sent_data(updated_data):
 
 def run():
     check_timeout()
-    if not decode_cookie_from_env():
+    if not os.path.exists(COOKIE_FILE):
+        print("❌ Cookie dosyası eksik, zincir duruyor.")
         return
+    print("✅ Cookie dosyası bulundu, zincir başlıyor.")
 
     driver = get_driver()
     check_timeout()
