@@ -14,7 +14,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from telegram_cep import send_message
-URL = "https://www.amazon.com.tr/s?k=ayakkab%C4%B1&i=fashion&rh=n%3A12466553031%2Cn%3A13546649031%2Cn%3A13546675031%2Cp_n_g-1004152217091%3A13681700031%257C13681701031%257C13681702031%257C13681703031%257C13681704031%257C13681705031%257C13681706031%2Cp_6%3AA1UNQM1SR2CHM%2Cp_98%3A21345978031%2Cp_123%3A198664&s=price-asc-rank&dc&ds=v1%3A096U8B%2BQ0Pgl%2BfW5FwD0ukiU2LVOreBf9krormvTeeA&crid=1D0799OCHRRLK&qid=1762638062&rnid=13546649031&sprefix=ayakkab%C4%B1%2Cfashion%2C443&xpid=2FdvfL0sBAyDi&ref=sr_nr_n_3"
+URL = "https://www.amazon.com.tr/s?k=ayakkab%C4%B1&i=fashion&rh=n%3A12466553031%2Cn%3A13546649031%2Cn%3A13546675031%2Cp_n_g-1004152217091%3A13681700031%257C13681701031%257C13681702031%257C13681703031%257C13681704031%257C13681705031%257C13681706031%2Cp_98%3A21345978031%2Cp_123%3A198664%2Cp_6%3AA1UNQM1SR2CHM&s=price-asc-rank&dc&ds=v1%3A37MnBwE4JT7huB4TBVMQdo5Gj3TRWFDClGgUM8eXBCQ&crid=1W794AZHEWUYU&qid=1762638636&rnid=13546649031&sprefix=ayakkab%C4%B1%2Cfashion%2C292&ref=sr_nr_n_3"
 COOKIE_FILE = "cookie_cep.json"
 SENT_FILE = "send_products.txt"
 
