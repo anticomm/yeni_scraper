@@ -74,11 +74,11 @@ def process_product(product):
             subprocess.run(["git", "stash", "pop"], cwd="urunlerim", check=True)
     except subprocess.CalledProcessError as e:
         print(f"⚠️ Git rebase/stash hatası ama zincir devam ediyor: {e}")
-    kategori_path = os.path.join("urunlerim", "Elektronik")
+    kategori_path = os.path.join("urunlerim", "Giyim")
     os.makedirs(kategori_path, exist_ok=True)
     filename = f"{slug}.html"
     path = os.path.join(kategori_path, filename)
-    relative_path = os.path.join("Elektronik", filename)
+    relative_path = os.path.join("Giyim", filename)
 
     with open(path, "w", encoding="utf-8") as f:
         f.write(html)
@@ -106,7 +106,7 @@ def process_product(product):
         print("⚠️ Commit edilecek değişiklik yok.")
 
 def update_category_page():
-    kategori_path = os.path.join("urunlerim", "Elektronik")
+    kategori_path = os.path.join("urunlerim", "Giyim")
     os.makedirs(kategori_path, exist_ok=True)
     html_dosyalar = [f for f in os.listdir(kategori_path) if f.endswith(".html") and f != "index.html"]
     liste = ""
@@ -118,18 +118,18 @@ def update_category_page():
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Elektronik Ürünler</title>
+<title>Giyim Ürünler</title>
 <link rel="stylesheet" href="../style.css">
 </head>
 <body>
 <div class="navbar">
 <ul>
 <li><a href="/">Anasayfa</a></li>
-<li><a href="index.html">Elektronik</a></li>
+<li><a href="index.html">Giyim</a></li>
 </ul>
 </div>
 <div class="container">
-<h1>📦 Elektronik Ürünler</h1>
+<h1>📦 Giyim Ürünler</h1>
 <ul>{liste}</ul>
 </div>
 </body>
@@ -137,7 +137,7 @@ def update_category_page():
 
     with open(os.path.join(kategori_path, "index.html"), "w", encoding="utf-8") as f:
         f.write(html)
-    print("✅ Elektronik kategori sayfası güncellendi.")
+    print("✅ Giyim kategori sayfası güncellendi.")
 
 def generate_site(products):
     for product in products:
