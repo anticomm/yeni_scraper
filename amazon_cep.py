@@ -1,4 +1,4 @@
-import time, os, requests, json, base64, re
+import time, os, requests, json, re
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -10,7 +10,7 @@ from telegram_cep import send_message
 from site_generator import generate_site
 
 start = time.time()
-URL = "https://www.amazon.com.tr/s?i=fashion&rh=n%3A12466553031%2Cn%3A13546649031%2Cn%3A13546675031%2Cp_n_g-1004152217091%3A13681700031%257C13681701031%257C13681702031%257C13681703031%257C13681704031%257C13681705031%257C13681706031%2Cp_6%3AA1UNQM1SR2CHM%2Cp_123%3A198664%2Cp_98%3A21345978031&s=price-asc-rank&dc&ds=v1%3AFYFZVYHlN9mVXXRi9BN42Ar%2FgPchnk6%2Bqp2K97jUkfo&xpid=DdVSLdcsSn-m6"
+URL = "https://www.amazon.com.tr/s?i=fashion&rh=n%3A12466553031%2Cn%3A13546649031%2Cn%3A13546675031%2Cp_n_g-1004152217091%3A13681700031%257C13681701031%257C13681702031%257C13681703031%257C13681704031%257C13681705031%257C13681706031%2Cp_6%3AA1UNQM1SR2CHM%2Cp_123%3A198664%2Cp_98%3A21345978031&s=price-asc-rank&dc"
 COOKIE_FILE = "cookie_cep.json"
 SENT_FILE = "send_products.txt"
 
@@ -117,68 +117,65 @@ def run():
     print("✅ Cookie dosyası bulundu, zincir başlıyor.")
 
     driver = get_driver()
+    driver.get("https://www.amazon.com.tr")
+    load_cookies(driver)
+    driver.get(URL)
+
+    try:
+        WebDriverWait(driver, 35).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-component-type='s-search-result']"))
+        )
+    except:
+        print("⚠️ Sayfa yüklenemedi.")
+        driver.quit()
+        return
+
+    scroll_page(driver)
+    driver.execute_script("""
+      document.querySelectorAll("h5.a-carousel-heading").forEach(h => {
+        let box = h.closest("div");
+        if (box) box.remove();
+      });
+    """)
+
+    items = driver.find_elements(By.CSS_SELECTOR, "div[data-component-type='s-search-result']")
+    print(f"🔍 {len(items)} ürün bulundu.")
     products = []
 
-    for page in range(1, 8):
-        paged_url = f"{URL}&page={page}"
-        print(f"📄 Sayfa {page} → {paged_url}")
-        driver.get("https://www.amazon.com.tr")
-        load_cookies(driver)
-        driver.get(paged_url)
-
+    for item in items:
+        check_timeout()
         try:
-            WebDriverWait(driver, 35).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-component-type='s-search-result']"))
-            )
-        except:
-            print(f"⚠️ Sayfa {page} yüklenemedi.")
-            continue
-
-        scroll_page(driver)
-        driver.execute_script("""
-          document.querySelectorAll("h5.a-carousel-heading").forEach(h => {
-            let box = h.closest("div");
-            if (box) box.remove();
-          });
-        """)
-
-        items = driver.find_elements(By.CSS_SELECTOR, "div[data-component-type='s-search-result']")
-        print(f"🔍 Sayfa {page}: {len(items)} ürün bulundu.")
-
-        for item in items:
-            check_timeout()
-            try:
-                if item.find_elements(By.XPATH, ".//span[contains(text(), 'Sponsorlu')]"):
-                    continue
-                asin = item.get_attribute("data-asin")
-                if not asin:
-                    continue
-                title = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("alt").strip()
-                link = item.find_element(By.CSS_SELECTOR, "a.a-link-normal").get_attribute("href")
-                image = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("src")
-                try:
-                    rating = item.find_element(By.CSS_SELECTOR, "span.a-icon-alt").text.strip()
-                except:
-                    rating = ""
-                raw_price = get_used_price_from_item(item)
-                price = extract_clean_price(raw_price) if raw_price else None
-                if not price:
-                    raw_price = get_used_price_from_detail(driver, link)
-                    price = extract_clean_price(raw_price) if raw_price else None
-                if not price:
-                    continue
-                products.append({
-                    "slug": asin,
-                    "asin": asin,
-                    "title": title,
-                    "link": link,
-                    "image": image,
-                    "price": price,
-                    "rating": rating,
-                })
-            except Exception as e:
-                print(f"⚠️ Ürün parse hatası: {e}")
+            if item.find_elements(By.XPATH, ".//span[contains(text(), 'Sponsorlu')]"):
                 continue
+            asin = item.get_attribute("data-asin")
+            if not asin:
+                continue
+            title = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("alt").strip()
+            link = item.find_element(By.CSS_SELECTOR, "a.a-link-normal").get_attribute("href")
+            image = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("src")
+            try:
+                rating = item.find_element(By.CSS_SELECTOR, "span.a-icon-alt").text.strip()
+            except:
+                rating = ""
+            raw_price = get_used_price_from_item(item)
+            price = extract_clean_price(raw_price) if raw_price else None
+            if not price:
+                raw_price = get_used_price_from_detail(driver, link)
+                price = extract_clean_price(raw_price) if raw_price else None
+            if not price:
+                continue
+            products.append({
+                "slug": asin,
+                "asin": asin,
+                "title": title,
+                "link": link,
+                "image": image,
+                "price": price,
+                "rating": rating,
+            })
+        except Exception as e:
+            print(f"⚠️ Ürün parse hatası: {e}")
+            continue
 
     driver.quit()
     print(f"✅ {len(products)} ürün başarıyla alındı.")
