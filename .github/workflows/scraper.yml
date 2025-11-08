@@ -24,10 +24,16 @@ jobs:
       - name: Reposu checkout edilsin
         uses: actions/checkout@v4
 
+      - name: amazon_cep.py içeriğini göster
+        run: |
+          echo "📄 amazon_cep.py içeriği:"
+          cat amazon_cep.py || echo "❌ Dosya okunamadı"
+      
       - name: Cookie dosyası gerçekten var mı?
         run: |
           echo "📁 Dosya kontrolü:"
           ls -l cookie_cep.json || echo "❌ cookie_cep.json bulunamadı"
+      
       - name: urunlerim repo'sunu klonla
         run: |
           git clone https://github.com/anticomm/urunlerim.git
