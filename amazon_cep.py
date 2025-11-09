@@ -161,7 +161,14 @@ def run():
     load_cookies(driver)
     time.sleep(1)
     driver.get(URL)  # Asıl arama sayfasına git
-    
+    time.sleep(2)
+    title = driver.title.lower()
+    if any(x in title for x in ["doğrulama", "giriş yap", "robot", "captcha"]):
+        print("⚠️ Amazon bot kontrolü tespit edildi — cookie geçerli olmayabilir.")
+        driver.save_screenshot("amazon_botcheck.png")
+        driver.quit()
+        return
+
     try:
         WebDriverWait(driver, 35).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-component-type='s-search-result']"))
