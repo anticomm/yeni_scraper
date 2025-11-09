@@ -156,11 +156,12 @@ def run():
     driver = get_driver()
     check_timeout()
 
-    driver.get(URL)
-    time.sleep(2)
+    driver = get_driver()
+    driver.get("https://www.amazon.com.tr/")  # Cookie’leri eklemek için temel domain
     load_cookies(driver)
-    check_timeout()
-    driver.get(URL)
+    time.sleep(1)
+    driver.get(URL)  # Asıl arama sayfasına git
+    
     try:
         WebDriverWait(driver, 35).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-component-type='s-search-result']"))
