@@ -14,7 +14,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from telegram_cep import send_message
-URL = "https://www.amazon.com.tr/s?k=ayakkab%C4%B1&rh=p_n_g-101015233022111%3A96332027031%2Cp_98%3A21345978031%2Cp_123%3A198664&dc&__mk_tr_TR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=2MPS40JVHTRVI&qid=1762680897&rnid=91049075031&sprefix=ayakkab%C4%B1%2Caps%2C188&ref=sr_nr_p_123_2&ds=v1%3AWXISLcKLWkyv%2F4IRpeS345GzWisWN5pntJub7RsEDM0"
+URL = "https://www.amazon.com.tr/s?k=ayakkabı&rh=p_n_g-101015233022111%3A96332027031%2Cp_98%3A21345978031%2Cp_123%3A198664"
 COOKIE_FILE = "cookie_cep.json"
 SENT_FILE = "send_products.txt"
 
