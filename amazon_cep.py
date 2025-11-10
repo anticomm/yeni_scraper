@@ -18,7 +18,7 @@ COOKIE_FILE = "cookie_cep.json"
 SENT_FILE = "send_products.txt"
 
 def check_timeout():
-    if time.time() - start > 110:
+    if time.time() - start > 410:
         print("⏱️ Süre doldu, zincir devam ediyor.")
         try:
             requests.post(
