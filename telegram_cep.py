@@ -15,7 +15,7 @@ def format_product_message(product):
     old_price = extract_clean_price(product.get("old_price", ""))
     asin = product.get("asin")
     if asin:
-        link = f"https://indirimsinyali.com/Giyim/{asin}.html"
+        link = f"https://indirimsinyali.com/Elektronik/{asin}.html"
     else:
         link = product.get("link", "#")
     discount = product.get("discount", "")
