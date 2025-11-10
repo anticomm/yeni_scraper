@@ -62,7 +62,7 @@ def send_message(product):
     message = format_product_message(product)
     image_url = product.get("image")
     asin = product.get("asin")
-    real_link = f"https://indirimsinyali.com/Giyim/{asin}.html" if asin else product.get("link", "#")
+    real_link = f"https://indirimsinyali.com/Elektronik/{asin}.html" if asin else product.get("link", "#")
     link = real_link
     
     try:
