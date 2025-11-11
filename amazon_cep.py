@@ -79,11 +79,6 @@ def get_driver():
     driver.set_page_load_timeout(30)
     return driver
 
-def scroll_page(driver, pause=1.5, steps=5):
-    for _ in range(steps):
-        driver.execute_script("window.scrollBy(0, 1000);")
-        time.sleep(pause)
-
 def extract_clean_price(text):
     if not text:
         return ""
