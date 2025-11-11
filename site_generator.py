@@ -26,7 +26,6 @@ def shorten_url(url):
 
 def generate_html(product):
     try:
-        html, slug = generate_html(product)
         with open(f"Elektronik/{slug}.html", "w", encoding="utf-8") as f:
             f.write(html)
     except FileNotFoundError:
