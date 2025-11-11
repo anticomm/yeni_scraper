@@ -237,3 +237,11 @@ def run():
         save_sent_data(sent_data)
     else:
         print("⚠️ Yeni veya işlenecek ürün bulunamadı.")
+    print("🚀 Zincir başlatıldı")
+
+if __name__ == "__main__":
+    print("🚀 Zincir başlatıldı")
+    try:
+        run()
+    except TimeoutError as e:
+        print(f"⏹️ Zincir durduruldu: {e}")
