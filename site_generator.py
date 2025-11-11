@@ -147,6 +147,7 @@ def process_product(product):
         subprocess.run(["git", "commit", "-m", f"{slug} ürünü eklendi"], cwd="urunlerim", check=True)
         subprocess.run(["git", "push", repo_url], cwd="urunlerim", check=True)
         print("🚀 Ürünlerim repo push tamamlandı.")
+        send_message(product)  # ✅ HTML dosyası artık yayında
     else:
         print("⚠️ Commit edilecek değişiklik yok.")
 
