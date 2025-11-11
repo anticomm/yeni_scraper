@@ -39,7 +39,8 @@ def generate_html(product):
     rating = product.get("rating", "")
     specs = product.get("specs", [])
     image = product.get("image", "")
-    link = shorten_url(product.get("amazon_link", "#"))
+    asin = product.get("asin", "")
+    link = shorten_url(product.get("amazon_link")) or f"https://www.amazon.com.tr/dp/{asin}"
     date = product.get("date", "2025-10-24")
 
     specs_html = "".join([f"<li>{spec}</li>" for spec in specs])
