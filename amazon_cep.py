@@ -172,10 +172,7 @@ def run():
             link = item.find_element(By.CSS_SELECTOR, "a.a-link-normal").get_attribute("href")
             image = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("src")
 
-            price = get_used_price_from_item(item)
-            if not price:
-                price = get_final_price(driver, link)
-
+            price = get_regular_price_from_item(item)
             if not price:
                 continue
 
