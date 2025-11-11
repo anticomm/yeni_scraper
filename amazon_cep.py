@@ -80,26 +80,12 @@ def scroll_page(driver, pause=1.5, steps=5):
     for _ in range(steps):
         driver.execute_script("window.scrollBy(0, 1000);")
         time.sleep(pause)
-def get_used_price_from_item(item):
-    try:
-        container = item.find_element(
-            By.XPATH,
-            ".//span[contains(text(), 'Diğer satın alma seçenekleri')]/following::span[contains(text(), 'TL')][1]"
-        )
-        price = container.text.strip()
-        return price
-    except:
-        return None
 
-def get_used_price_from_detail(driver):
+def get_regular_price_from_item(item):
     try:
-        container = driver.find_element(
-            By.XPATH,
-            "//div[contains(@class, 'a-column') and .//span[contains(text(), 'İkinci El Ürün Satın Al:')]]"
-        )
-        price_element = container.find_element(By.CLASS_NAME, "offer-price")
-        price = price_element.text.strip()
-        return price
+        whole = item.find_element(By.CSS_SELECTOR, "span.a-price-whole").text.strip()
+        fraction = item.find_element(By.CSS_SELECTOR, "span.a-price-fraction").text.strip()
+        return f"{whole},{fraction} TL"
     except:
         return None
 
