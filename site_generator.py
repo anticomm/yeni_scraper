@@ -2,6 +2,7 @@ import os
 import subprocess
 import requests
 from bs4 import BeautifulSoup
+from telegram_cep import send_message
 
 def get_amazon_data(asin):
     url = f"https://www.amazon.com.tr/dp/{asin}"
@@ -36,44 +37,6 @@ TEMPLATE = load_template()
 
 def generate_html(product, template=TEMPLATE):
     if not template:
-        return "", product.get("asin", "urun")
-
-    slug = product.get("slug") or product.get("asin") or "urun"
-    title = product.get("title", "Ürün")
-    price = product.get("price", "")
-    old_price = product.get("old_price", "")
-    rating = product.get("rating", "")
-    specs = product.get("specs", [])
-    image = product.get("image", "")
-    asin = product.get("asin", "")
-    link = shorten_url(product.get("amazon_link")) or f"https://www.amazon.com.tr/dp/{asin}"
-    date = product.get("date", "2025-10-24")
-
-    specs_html = "".join([f"<li>{spec}</li>" for spec in specs])
-    fiyat_html = (
-        f"<p><del>{old_price}</del> → <strong>{price}</strong></p>"
-        if old_price and old_price != price
-        else f"<p><strong>{price}</strong></p>"
-    )
-
-    html = template.format(
-        title=title,
-        image=image,
-        price_html=fiyat_html,
-        specs_html=specs_html,
-        rating=rating,
-        link=link,
-        asin=slug,
-        date=date
-    )
-    return html, slug
-
-def generate_html(product):
-    try:
-        with open("template.html", "r", encoding="utf-8") as f:
-            template = f.read()
-    except FileNotFoundError:
-        print("❌ template.html dosyası bulunamadı.")
         return "", product.get("asin", "urun")
 
     slug = product.get("slug") or product.get("asin") or "urun"
