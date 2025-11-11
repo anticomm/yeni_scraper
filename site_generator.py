@@ -1,5 +1,6 @@
 import os
 import subprocess
+import threading
 from telegram_cep import send_message
 from concurrent.futures import ThreadPoolExecutor
 
@@ -64,7 +65,10 @@ def process_product(product, template):
         f.write(html)
 
     print(f"✅ Ürün sayfası oluşturuldu: {path}")
-    send_message(product)
+
+    # ✅ Mesajı paralel gönder
+    threading.Thread(target=send_message, args=(product,), daemon=True).start()
+
     return slug
 
 def update_category_page():
@@ -111,7 +115,7 @@ def generate_site(products, template):
     subprocess.run(["git", "config", "--global", "user.email", "actions@github.com"], check=True)
 
     with ThreadPoolExecutor(max_workers=4) as executor:
-        results = executor.map(lambda p: process_product(p, template), products)
+        results = list(executor.map(lambda p: process_product(p, template), products))
         slugs = [slug for slug in results if slug]
 
     update_category_page()
