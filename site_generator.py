@@ -118,7 +118,7 @@ def update_category_page():
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Elektonik Ürünler</title>
+<title>Elektronik Ürünler</title>
 <link rel="stylesheet" href="../style.css">
 </head>
 <body>
