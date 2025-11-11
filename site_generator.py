@@ -1,6 +1,7 @@
 import os
 import subprocess
 from telegram_cep import send_message
+from concurrent.futures import ThreadPoolExecutor
 
 def shorten_url(url):
     return url
@@ -108,8 +109,8 @@ def update_category_page():
     subprocess.run(["git", "commit", "-m", "Kategori sayfası güncellendi"], cwd="urunlerim", check=True)
 
 def generate_site(products, template):
-    for product in products:
-        process_product(product, template)
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        executor.map(lambda p: process_product(p, template), products)
 
     update_category_page()
 
