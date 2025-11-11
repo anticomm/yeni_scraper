@@ -63,6 +63,7 @@ def process_product(product):
         f.write(html)
     os.utime(path, None)
     print(f"✅ Ürün sayfası oluşturuldu: {path}")
+    send_message(product)  # ✅ Dosya hazır, mesaj gönder
     return slug
 
 def update_category_page():
