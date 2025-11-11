@@ -124,7 +124,7 @@ def generate_site(products, template):
     repo_url = f"https://{token}@github.com/anticomm/urunlerim.git"
 
     try:
-        subprocess.run(["git", "pull", "--rebase"], cwd="urunlerim", check=True)
+        subprocess.run(["git", "pull", "--ff-only"], cwd="urunlerim", check=True)
     except subprocess.CalledProcessError as e:
         print(f"⚠️ Rebase hatası ama zincir devam ediyor: {e}")
 
