@@ -199,6 +199,7 @@ def run():
     for product in products:
         asin = product["asin"]
         price = product["price"].strip()
+        all_products_to_process.append(product)
 
         if asin in sent_data:
             old_price = sent_data[asin]
@@ -211,9 +212,11 @@ def run():
                 continue
 
             if new_val < old_val:
-                print(f"📉 Fiyat düştü: {product['title']} → {old_price} → {price}")
-                product["old_price"] = old_price
-                products_to_send.append(product)
+                diff = (old_val - new_val) / old_val
+                if diff >= 0.19:
+                    print(f"📉 %19+ düşüş: {product['title']} → {old_price} → {price}")
+                    product["old_price"] = old_price
+                    products_to_send.append(product)
             else:
                 print(f"⏩ Fiyat yükseldi veya aynı: {product['title']} → {old_price} → {price}")
             sent_data[asin] = price
@@ -223,17 +226,15 @@ def run():
             products_to_send.append(product)
             sent_data[asin] = price
 
-    if products_to_send:
-        site.generate_site(products_to_send, TEMPLATE)
-        print(f"📁 Dosya güncellendi: {len(products_to_send)} ürün eklendi/güncellendi.")
-        
-        save_sent_data(sent_data)
-        print(f"📁 Dosya güncellendi: {len(products_to_send)} ürün eklendi/güncellendi.")
-    else:
-        print("⚠️ Yeni veya indirimli ürün bulunamadı.")
+    if all_products_to_process:
+        site.generate_site(all_products_to_process, TEMPLATE, products_to_send)
+        print(f"📁 HTML üretildi: {len(all_products_to_process)} ürün işlendi.")
+    
+        if products_to_send:
+            print(f"📲 Mesaj gönderildi: {len(products_to_send)} ürün bildirildi.")
+        else:
+            print("⚠️ Bildirilecek indirimli ürün yok.")
 
-if __name__ == "__main__":
-    try:
-        run()
-    except TimeoutError as e:
-        print(f"⏹️ Zincir durduruldu: {e}")
+        save_sent_data(sent_data)
+    else:
+        print("⚠️ Yeni veya işlenecek ürün bulunamadı.")
