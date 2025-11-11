@@ -18,7 +18,7 @@ from site_generator import generate_site, load_template
 URL = "https://www.amazon.com.tr/s?i=kitchen&rh=n%3A12466781031%2Cn%3A13511256031%2Cn%3A13511289031%2Cp_98%3A21345978031%2Cp_6%3AA1UNQM1SR2CHM&s=popularity-rank&dc&fs=true"
 COOKIE_FILE = "cookie_cep.json"
 SENT_FILE = "send_products.txt"
-
+TEMPLATE = load_template()
 def decode_cookie_from_env():
     cookie_b64 = os.getenv("COOKIE_B64")
     if not cookie_b64:
@@ -224,7 +224,7 @@ def run():
             sent_data[asin] = price
 
     if products_to_send:
-        site.generate_site(products_to_send)
+        site.generate_site(products_to_send, TEMPLATE)
         print(f"📁 Dosya güncellendi: {len(products_to_send)} ürün eklendi/güncellendi.")
         
         save_sent_data(sent_data)
