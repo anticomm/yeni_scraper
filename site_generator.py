@@ -53,7 +53,7 @@ def generate_html(product, template=TEMPLATE):
     )
     return html, slug
 
-def process_product(product, template):
+def process_product(product, template, notify=False):
     html, slug = generate_html(product, template)
     if not html.strip():
         print(f"❌ HTML boş: {slug}")
@@ -66,8 +66,9 @@ def process_product(product, template):
 
     print(f"✅ Ürün sayfası oluşturuldu: {path}")
 
-    # ✅ Mesajı paralel gönder
-    threading.Thread(target=send_message, args=(product,), daemon=True).start()
+    # ✅ Sadece bildirilmesi gereken ürünler için mesaj gönder
+    if notify:
+        threading.Thread(target=send_message, args=(product,), daemon=True).start()
 
     return slug
 
@@ -110,13 +111,17 @@ def update_category_page():
     if has_changes:
         subprocess.run(["git", "commit", "-m", "Kategori sayfası güncellendi"], cwd="urunlerim", check=True)
 
-def generate_site(products, template):
+def generate_site(products, template, products_to_notify):
     subprocess.run(["git", "config", "--global", "user.name", "github-actions"], check=True)
     subprocess.run(["git", "config", "--global", "user.email", "actions@github.com"], check=True)
 
+    slugs = []
     with ThreadPoolExecutor(max_workers=4) as executor:
-        results = list(executor.map(lambda p: process_product(p, template), products))
-        slugs = [slug for slug in results if slug]
+        futures = []
+        for product in products:
+            notify = product in products_to_notify
+            futures.append(executor.submit(process_product, product, template, notify))
+        slugs = [f.result() for f in futures if f.result()]
 
     update_category_page()
 
@@ -126,7 +131,7 @@ def generate_site(products, template):
     try:
         subprocess.run(["git", "pull", "--ff-only"], cwd="urunlerim", check=True)
     except subprocess.CalledProcessError as e:
-        print(f"⚠️ Rebase hatası ama zincir devam ediyor: {e}")
+        print(f"⚠️ Pull hatası ama zincir devam ediyor: {e}")
 
     subprocess.run(["git", "add", "."], cwd="urunlerim", check=True)
     has_changes = subprocess.call(["git", "diff", "--cached", "--quiet"], cwd="urunlerim") != 0
