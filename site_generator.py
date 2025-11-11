@@ -4,7 +4,7 @@ from telegram_cep import send_message
 from concurrent.futures import ThreadPoolExecutor
 
 def shorten_url(url):
-    return url
+    return url  # t.ly API entegresi buraya eklenebilir
 
 def load_template():
     try:
@@ -65,11 +65,6 @@ def process_product(product, template):
 
     print(f"✅ Ürün sayfası oluşturuldu: {path}")
     send_message(product)
-
-    relative_path = os.path.join("Elektronik", filename)
-    subprocess.run(["git", "add", relative_path], cwd="urunlerim", check=True)
-    subprocess.run(["git", "commit", "-m", f"{slug} ürünü eklendi"], cwd="urunlerim", check=True)
-
     return slug
 
 def update_category_page():
@@ -84,6 +79,7 @@ def update_category_page():
 <head>
 <meta charset="UTF-8">
 <title>Elektronik Ürünler</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../style.css">
 </head>
 <body>
@@ -106,24 +102,33 @@ def update_category_page():
     print("✅ Elektronik kategori sayfası güncellendi.")
 
     subprocess.run(["git", "add", os.path.join("Elektronik", "index.html")], cwd="urunlerim", check=True)
-    subprocess.run(["git", "commit", "-m", "Kategori sayfası güncellendi"], cwd="urunlerim", check=True)
+    has_changes = subprocess.call(["git", "diff", "--cached", "--quiet"], cwd="urunlerim") != 0
+    if has_changes:
+        subprocess.run(["git", "commit", "-m", "Kategori sayfası güncellendi"], cwd="urunlerim", check=True)
 
 def generate_site(products, template):
+    subprocess.run(["git", "config", "--global", "user.name", "github-actions"], check=True)
+    subprocess.run(["git", "config", "--global", "user.email", "actions@github.com"], check=True)
+
     with ThreadPoolExecutor(max_workers=4) as executor:
-        executor.map(lambda p: process_product(p, template), products)
+        results = executor.map(lambda p: process_product(p, template), products)
+        slugs = [slug for slug in results if slug]
 
     update_category_page()
 
     token = os.getenv("GH_TOKEN")
     repo_url = f"https://{token}@github.com/anticomm/urunlerim.git"
 
-    subprocess.run(["git", "config", "--global", "user.name", "github-actions"], check=True)
-    subprocess.run(["git", "config", "--global", "user.email", "actions@github.com"], check=True)
-
     try:
         subprocess.run(["git", "pull", "--rebase"], cwd="urunlerim", check=True)
     except subprocess.CalledProcessError as e:
         print(f"⚠️ Rebase hatası ama zincir devam ediyor: {e}")
 
-    subprocess.run(["git", "push", repo_url], cwd="urunlerim", check=True)
-    print("🚀 Tüm değişiklikler pushlandı.")
+    subprocess.run(["git", "add", "."], cwd="urunlerim", check=True)
+    has_changes = subprocess.call(["git", "diff", "--cached", "--quiet"], cwd="urunlerim") != 0
+    if has_changes:
+        subprocess.run(["git", "commit", "-m", f"{len(slugs)} ürün eklendi/güncellendi"], cwd="urunlerim", check=True)
+        subprocess.run(["git", "push", repo_url], cwd="urunlerim", check=True)
+        print("🚀 Toplu repo push tamamlandı.")
+    else:
+        print("⚠️ Commit edilecek değişiklik yok.")
