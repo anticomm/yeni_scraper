@@ -63,9 +63,8 @@ def process_product(product, template):
         f.write(html)
 
     print(f"✅ Ürün sayfası oluşturuldu: {path}")
-    send_message(product)  # ✅ Dosya hazır, mesaj gönder
+    send_message(product)
 
-    # 🔥 Sadece bu dosyayı Git'e ekle
     relative_path = os.path.join("Elektronik", filename)
     subprocess.run(["git", "add", relative_path], cwd="urunlerim", check=True)
     subprocess.run(["git", "commit", "-m", f"{slug} ürünü eklendi"], cwd="urunlerim", check=True)
@@ -100,9 +99,13 @@ def update_category_page():
 </body>
 </html>"""
 
-    with open(os.path.join(HTML_DIR, "index.html"), "w", encoding="utf-8") as f:
+    index_path = os.path.join(HTML_DIR, "index.html")
+    with open(index_path, "w", encoding="utf-8") as f:
         f.write(html)
     print("✅ Elektronik kategori sayfası güncellendi.")
+
+    subprocess.run(["git", "add", os.path.join("Elektronik", "index.html")], cwd="urunlerim", check=True)
+    subprocess.run(["git", "commit", "-m", "Kategori sayfası güncellendi"], cwd="urunlerim", check=True)
 
 def generate_site(products, template):
     for product in products:
@@ -121,11 +124,5 @@ def generate_site(products, template):
     except subprocess.CalledProcessError as e:
         print(f"⚠️ Rebase hatası ama zincir devam ediyor: {e}")
 
-    subprocess.run(["git", "add", "."], cwd="urunlerim", check=True)
-    has_changes = subprocess.call(["git", "diff", "--cached", "--quiet"], cwd="urunlerim") != 0
-    if has_changes:
-        subprocess.run(["git", "commit", "-m", f"{len(products)} ürün eklendi/güncellendi"], cwd="urunlerim", check=True)
-        subprocess.run(["git", "push", repo_url], cwd="urunlerim", check=True)
-        print("🚀 Toplu repo push tamamlandı.")
-    else:
-        print("⚠️ Commit edilecek değişiklik yok.")
+    subprocess.run(["git", "push", repo_url], cwd="urunlerim", check=True)
+    print("🚀 Tüm değişiklikler pushlandı.")
