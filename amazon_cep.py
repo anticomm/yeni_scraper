@@ -132,7 +132,7 @@ def run():
     check_timeout()
     if not decode_cookie_from_env():
         return
-
+    all_products_to_process = []
     driver = get_driver()
     check_timeout()
 
@@ -223,7 +223,6 @@ def run():
 
         else:
             print(f"🆕 Yeni ürün: {product['title']}")
-            products_to_send.append(product)
             sent_data[asin] = price
 
     if all_products_to_process:
