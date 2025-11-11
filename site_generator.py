@@ -30,9 +30,9 @@ def generate_html(product):
             template = f.read()
     except FileNotFoundError:
         print("❌ template.html dosyası bulunamadı.")
-        return "", product.get("slug", "urun")
+        return "", product.get("asin", "urun")
 
-    slug = product.get("slug", "urun")
+    slug = product.get("slug") or product.get("asin") or "urun"
     title = product.get("title", "Ürün")
     price = product.get("price", "")
     old_price = product.get("old_price", "")
