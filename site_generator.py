@@ -51,8 +51,8 @@ def generate_html(product, template=TEMPLATE):
     )
     return html, slug
 
-def process_product(product):
-    html, slug = generate_html(product)
+def process_product(product, template):
+    html, slug = generate_html(product, template)
     if not html.strip():
         print(f"❌ HTML boş: {slug}")
         return None
@@ -61,9 +61,15 @@ def process_product(product):
     path = os.path.join(HTML_DIR, filename)
     with open(path, "w", encoding="utf-8") as f:
         f.write(html)
-    os.utime(path, None)
+
     print(f"✅ Ürün sayfası oluşturuldu: {path}")
     send_message(product)  # ✅ Dosya hazır, mesaj gönder
+
+    # 🔥 Sadece bu dosyayı Git'e ekle
+    relative_path = os.path.join("Elektronik", filename)
+    subprocess.run(["git", "add", relative_path], cwd="urunlerim", check=True)
+    subprocess.run(["git", "commit", "-m", f"{slug} ürünü eklendi"], cwd="urunlerim", check=True)
+
     return slug
 
 def update_category_page():
@@ -98,7 +104,12 @@ def update_category_page():
         f.write(html)
     print("✅ Elektronik kategori sayfası güncellendi.")
 
-def generate_site(products):
+def generate_site(products, template):
+    for product in products:
+        process_product(product, template)
+
+    update_category_page()
+
     token = os.getenv("GH_TOKEN")
     repo_url = f"https://{token}@github.com/anticomm/urunlerim.git"
 
@@ -110,21 +121,11 @@ def generate_site(products):
     except subprocess.CalledProcessError as e:
         print(f"⚠️ Rebase hatası ama zincir devam ediyor: {e}")
 
-    slugs = []
-    for product in products:
-        slug = process_product(product)
-        if slug:
-            slugs.append(slug)
-
-    update_category_page()
     subprocess.run(["git", "add", "."], cwd="urunlerim", check=True)
     has_changes = subprocess.call(["git", "diff", "--cached", "--quiet"], cwd="urunlerim") != 0
     if has_changes:
-        subprocess.run(["git", "commit", "-m", f"{len(slugs)} ürün eklendi/güncellendi"], cwd="urunlerim", check=True)
+        subprocess.run(["git", "commit", "-m", f"{len(products)} ürün eklendi/güncellendi"], cwd="urunlerim", check=True)
         subprocess.run(["git", "push", repo_url], cwd="urunlerim", check=True)
         print("🚀 Toplu repo push tamamlandı.")
-
-        for product in products:
-            send_message(product)  # ✅ Sayfa yayında, mesaj gönderilebilir
     else:
         print("⚠️ Commit edilecek değişiklik yok.")
