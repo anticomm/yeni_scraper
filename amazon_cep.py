@@ -5,6 +5,7 @@ import json
 import time
 import base64
 import re
+import site_generator as site
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -222,6 +223,9 @@ def run():
             sent_data[asin] = price
 
     if products_to_send:
+        site.generate_site(products_to_send)
+        print(f"📁 Dosya güncellendi: {len(products_to_send)} ürün eklendi/güncellendi.")
+        
         for p in products_to_send:
             send_message(p)
         save_sent_data(sent_data)
