@@ -26,8 +26,9 @@ def shorten_url(url):
 
 def generate_html(product):
     try:
-        with open("template.html", "r", encoding="utf-8") as f:
-            template = f.read()
+        html, slug = generate_html(product)
+        with open(f"Elektronik/{slug}.html", "w", encoding="utf-8") as f:
+            f.write(html)
     except FileNotFoundError:
         print("❌ template.html dosyası bulunamadı.")
         return "", product.get("slug", "urun")
