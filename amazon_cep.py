@@ -251,7 +251,6 @@ def run():
                     product["old_price"] = old_price
                     products_to_send.append(product)
             else:
-                print(f"⏩ Fiyat yükseldi veya aynı: {product['title']} → {old_price} → {price}")
             sent_data[asin] = price
 
         else:
