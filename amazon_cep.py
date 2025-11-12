@@ -145,7 +145,7 @@ def run():
     check_timeout()
     driver.get(URL)
 
-    MAX_PAGES = 5
+    MAX_PAGES = 7
     current_page = 1
 
     while current_page <= MAX_PAGES:
