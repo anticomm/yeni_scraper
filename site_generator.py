@@ -61,12 +61,20 @@ def process_product(product, template, notify=False):
 
     filename = f"{slug}.html"
     path = os.path.join(HTML_DIR, filename)
+
+    # ✅ Eğer dosya zaten varsa ve içerik aynıysa → yazma
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            existing = f.read()
+        if existing.strip() == html.strip():
+            print(f"⏩ Değişmeyen ürün atlandı: {path}")
+            return None
+
+    # ✅ Yeni veya değişmişse → yaz
     with open(path, "w", encoding="utf-8") as f:
         f.write(html)
-
     print(f"✅ Ürün sayfası oluşturuldu: {path}")
 
-    # ✅ Sadece bildirilmesi gereken ürünler için mesaj gönder
     if notify:
         threading.Thread(target=send_message, args=(product,), daemon=True).start()
 
