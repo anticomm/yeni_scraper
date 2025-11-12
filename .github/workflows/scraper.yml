@@ -80,7 +80,7 @@ jobs:
           git pull origin main --rebase --autostash || echo "⏩ Pull başarısız, devam ediliyor"
           git push origin main --force-with-lease || echo "⏩ Push başarısız ama zincir devam ediyor"
       - name: 30 saniye bekle
-        run: sleep 20
+        run: sleep 2
 
       - name: Scraper B'yi tetikle
         run: |
