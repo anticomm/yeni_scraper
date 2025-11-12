@@ -132,7 +132,9 @@ def run():
     check_timeout()
     if not decode_cookie_from_env():
         return
+
     all_products_to_process = []
+    products = []
     driver = get_driver()
     check_timeout()
 
@@ -141,60 +143,84 @@ def run():
     load_cookies(driver)
     check_timeout()
     driver.get(URL)
-    try:
-        WebDriverWait(driver, 35).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-component-type='s-search-result']"))
-        )
-    except:
-        print("⚠️ Sayfa yüklenemedi.")
-        driver.quit()
-        return
-    scroll_page(driver)
-    driver.execute_script("""
-      document.querySelectorAll("h5.a-carousel-heading").forEach(h => {
-        let box = h.closest("div");
-        if (box) box.remove();
-      });
-    """)
 
-    items = driver.find_elements(By.CSS_SELECTOR, "div[data-component-type='s-search-result']")
-    print(f"🔍 {len(items)} ürün bulundu.")
-    products = []
-    for item in items:
-        check_timeout()
+    MAX_PAGES = 5
+    current_page = 1
+
+    while current_page <= MAX_PAGES:
+        print(f"📄 Sayfa {current_page} taranıyor...")
+
         try:
-            if item.find_elements(By.XPATH, ".//span[contains(text(), 'Sponsorlu')]"):
+            WebDriverWait(driver, 35).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-component-type='s-search-result']"))
+            )
+        except:
+            print("⚠️ Sayfa yüklenemedi.")
+            break
+
+        scroll_page(driver)
+        driver.execute_script("""
+          document.querySelectorAll("h5.a-carousel-heading").forEach(h => {
+            let box = h.closest("div");
+            if (box) box.remove();
+          });
+        """)
+
+        items = driver.find_elements(By.CSS_SELECTOR, "div[data-component-type='s-search-result']")
+        print(f"🔍 {len(items)} ürün bulundu.")
+
+        for item in items:
+            check_timeout()
+            try:
+                if item.find_elements(By.XPATH, ".//span[contains(text(), 'Sponsorlu')]"):
+                    continue
+
+                asin = item.get_attribute("data-asin")
+                if not asin:
+                    continue
+
+                title = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("alt").strip()
+                link = item.find_element(By.CSS_SELECTOR, "a.a-link-normal").get_attribute("href")
+                image = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("src")
+
+                price = get_regular_price_from_item(item)
+                if not price:
+                    continue
+
+                products.append({
+                    "asin": asin,
+                    "title": title,
+                    "link": link,
+                    "image": image,
+                    "price": price
+                })
+
+            except Exception as e:
+                print(f"⚠️ Ürün parse hatası: {e}")
                 continue
 
-            asin = item.get_attribute("data-asin")
-            if not asin:
-                continue
-
-            title = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("alt").strip()
-            link = item.find_element(By.CSS_SELECTOR, "a.a-link-normal").get_attribute("href")
-            image = item.find_element(By.CSS_SELECTOR, "img.s-image").get_attribute("src")
-
-            price = get_regular_price_from_item(item)
-            if not price:
-                continue
-
-            products.append({
-                "asin": asin,
-                "title": title,
-                "link": link,
-                "image": image,
-                "price": price
-            })
-
+        # Sayfa geçişi
+        try:
+            next_button = driver.find_element(By.CSS_SELECTOR, "a.s-pagination-next")
+            next_link = next_button.get_attribute("href")
+            if not next_link:
+                print("⛔ Son sayfaya ulaşıldı.")
+                break
+            full_next_url = "https://www.amazon.com.tr" + next_link
+            driver.get(full_next_url)
+            current_page += 1
+            check_timeout()
         except Exception as e:
-            print(f"⚠️ Ürün parse hatası: {e}")
-            continue
+            print(f"⛔ Sayfa geçişi yapılamadı: {e}")
+            break
 
     driver.quit()
     print(f"✅ {len(products)} ürün başarıyla alındı.")
 
     sent_data = load_sent_data()
     products_to_send = []
+
+    # Bu noktadan itibaren senin mevcut zincir mantığın aynen devam edebilir
 
     for product in products:
         asin = product["asin"]
