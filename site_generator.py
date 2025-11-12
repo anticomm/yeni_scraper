@@ -66,8 +66,7 @@ def process_product(product, template, notify=False):
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
             existing = f.read()
-        if existing.strip() == html.strip():
-            print(f"⏩ Değişmeyen ürün atlandı: {path}")
+        if existing.strip() == html.strip(): 
             return None
 
     # ✅ Yeni veya değişmişse → yaz
@@ -130,7 +129,15 @@ def generate_site(products, template, products_to_notify):
             notify = product in products_to_notify
             futures.append(executor.submit(process_product, product, template, notify))
         slugs = [f.result() for f in futures if f.result()]
+        total = len(products)
+        updated = len(slugs)
+        skipped = total - updated
 
+        print(f"📦 Toplam ürün: {total}")
+        if updated > 0:
+            print(f"✅ {updated} ürün güncellendi veya eklendi.")
+        if skipped > 0:
+            print(f"⏩ {skipped} ürün değişmedi, HTML yazılmadı.")
     update_category_page()
 
     token = os.getenv("GH_TOKEN")
