@@ -16,6 +16,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from telegram_cep import send_message
 from site_generator import generate_site, load_template
 from urllib.parse import urljoin
+from selenium.common.exceptions import NoSuchElementException
+
 URL = "https://www.amazon.com.tr/s?i=kitchen&rh=n%3A12466781031%2Cn%3A13511256031%2Cn%3A13511289031%2Cp_98%3A21345978031%2Cp_6%3AA1UNQM1SR2CHM&s=popularity-rank&dc&fs=true"
 COOKIE_FILE = "cookie_cep.json"
 SENT_FILE = "send_products.txt"
@@ -205,15 +207,19 @@ def run():
             next_button = driver.find_element(By.CSS_SELECTOR, "a.s-pagination-next")
             next_link = next_button.get_attribute("href")
             if not next_link:
-                print("⛔ Son sayfaya ulaşıldı.")
+                print("⏹️ Son sayfaya ulaşıldı, pagination tamamlandı.")
                 break
             full_next_url = urljoin("https://www.amazon.com.tr", next_link)
             driver.get(full_next_url)
             current_page += 1
             check_timeout()
-        except Exception as e:
-            print(f"⛔ Sayfa geçişi yapılamadı: {e}")
+        except NoSuchElementException:
+            print("⏹️ Son sayfaya ulaşıldı, pagination tamamlandı.")
             break
+        except Exception:
+            print("⚠️ Sayfa geçiş hatası, zincir devam ediyor.")
+            break
+
 
     driver.quit()
     print(f"✅ {len(products)} ürün başarıyla alındı.")
