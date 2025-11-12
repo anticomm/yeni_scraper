@@ -79,8 +79,7 @@ jobs:
           git commit -m "📦 Yeni ürünler eklendi" || echo "⏩ Commit edilecek değişiklik yok"
           git pull origin main --rebase --autostash || echo "⏩ Pull başarısız, devam ediliyor"
           git push origin main --force-with-lease || echo "⏩ Push başarısız ama zincir devam ediyor"
-      - name: 30 saniye bekle
-        run: sleep 2
+      
 
       - name: Scraper C'yi tetikle
         run: |
