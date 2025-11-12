@@ -251,7 +251,7 @@ def run():
                     product["old_price"] = old_price
                     products_to_send.append(product)
             else:
-            sent_data[asin] = price
+                sent_data[asin] = price
 
         else:
             print(f"🆕 Yeni ürün: {product['title']}")
