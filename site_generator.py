@@ -1,3 +1,4 @@
+
 import os
 import subprocess
 import threading
@@ -16,7 +17,7 @@ def load_template():
         return ""
 
 TEMPLATE = load_template()
-HTML_DIR = os.path.join("urunlerim", "Elektronik")
+HTML_DIR = os.path.join("urunlerim", "Giyim")
 os.makedirs(HTML_DIR, exist_ok=True)
 
 def generate_html(product, template=TEMPLATE):
@@ -90,7 +91,7 @@ def update_category_page():
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Elektronik Ürünler</title>
+<title>Giyim Ürünler</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../style.css">
 </head>
@@ -98,11 +99,11 @@ def update_category_page():
 <div class="navbar">
 <ul>
 <li><a href="/">Anasayfa</a></li>
-<li><a href="index.html">Elektronik</a></li>
+<li><a href="index.html">Giyim</a></li>
 </ul>
 </div>
 <div class="container">
-<h1>📦 Elektronik Ürünler</h1>
+<h1>📦 Giyim Ürünler</h1>
 <ul>{liste}</ul>
 </div>
 </body>
@@ -111,9 +112,9 @@ def update_category_page():
     index_path = os.path.join(HTML_DIR, "index.html")
     with open(index_path, "w", encoding="utf-8") as f:
         f.write(html)
-    print("✅ Elektronik kategori sayfası güncellendi.")
+    print("✅ Giyim kategori sayfası güncellendi.")
 
-    subprocess.run(["git", "add", os.path.join("Elektronik", "index.html")], cwd="urunlerim", check=True)
+    subprocess.run(["git", "add", os.path.join("Giyim", "index.html")], cwd="urunlerim", check=True)
     has_changes = subprocess.call(["git", "diff", "--cached", "--quiet"], cwd="urunlerim") != 0
     if has_changes:
         subprocess.run(["git", "commit", "-m", "Kategori sayfası güncellendi"], cwd="urunlerim", check=True)
@@ -142,7 +143,10 @@ def generate_site(products, template, products_to_notify):
 
     token = os.getenv("GH_TOKEN")
     repo_url = f"https://{token}@github.com/anticomm/urunlerim.git"
-
+    
+    if not os.path.exists("urunlerim"):
+        subprocess.run(["git", "clone", repo_url, "urunlerim"], check=True)
+   
     try:
         subprocess.run(["git", "pull", "--ff-only"], cwd="urunlerim", check=True)
     except subprocess.CalledProcessError as e:
@@ -152,7 +156,7 @@ def generate_site(products, template, products_to_notify):
     has_changes = subprocess.call(["git", "diff", "--cached", "--quiet"], cwd="urunlerim") != 0
     if has_changes:
         subprocess.run(["git", "commit", "-m", f"{len(slugs)} ürün eklendi/güncellendi"], cwd="urunlerim", check=True)
-        subprocess.run(["git", "push", repo_url], cwd="urunlerim", check=True)
+        subprocess.run(["git", "push", repo_url], check=True)
         print("🚀 Toplu repo push tamamlandı.")
     else:
         print("⚠️ Commit edilecek değişiklik yok.")
